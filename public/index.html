@@ -1,0 +1,759 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d18">
+  <title>DeepMine Stock Radar</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090d18;
+      --panel: #111827;
+      --panel2: #172236;
+      --line: #283750;
+      --text: #f1f5ff;
+      --muted: #94a3b8;
+      --green: #4ade80;
+      --blue: #65aaff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% -20%, #1d3760 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    button, input { font: inherit; }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: auto;
+    }
+
+    header {
+      padding: 28px 0 22px;
+      border-bottom: 1px solid #ffffff12;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border: 1px solid #4c8bff66;
+      border-radius: 17px;
+      background: linear-gradient(145deg, #234d86, #17233c);
+      font-size: 29px;
+      box-shadow: 0 0 35px #3779f01c;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(23px, 4vw, 35px);
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 13px;
+      border: 1px solid #ffffff16;
+      border-radius: 30px;
+      background: #111827cc;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fbbf24;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .dot.online {
+      background: var(--green);
+      color: var(--green);
+    }
+
+    main { padding: 27px 0 45px; }
+
+    .hero {
+      padding: 28px;
+      border: 1px solid #4779bd55;
+      border-radius: 24px;
+      background: linear-gradient(115deg, #172b48, #111827 72%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "⛏";
+      position: absolute;
+      right: 35px;
+      top: -28px;
+      font-size: 145px;
+      opacity: .07;
+      transform: rotate(-18deg);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      color: #86b8ff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .hero h2 {
+      margin: 12px 0 8px;
+      font-size: clamp(23px, 4vw, 34px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 600px;
+      color: #aebdd2;
+      line-height: 1.6;
+      font-size: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 30px;
+    }
+
+    .stat {
+      padding: 19px;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: #101827e8;
+      border-radius: 17px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 17px;
+    }
+
+    .section-head h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .search {
+      width: min(260px, 100%);
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #0d1422;
+      outline: none;
+      color: var(--text);
+    }
+
+    .search:focus { border-color: var(--blue); }
+
+    .tabs {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 11px 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #b7c4d8;
+      background: #111827;
+      cursor: pointer;
+      transition: .18s;
+    }
+
+    .tab:hover { border-color: #5d83b7; }
+
+    .tab.active {
+      background: #203e68;
+      border-color: #5796f5;
+      color: white;
+      box-shadow: inset 0 0 0 1px #5796f525;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .card {
+      --accent: #65aaff;
+      position: relative;
+      overflow: hidden;
+      padding: 19px;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(155deg, #182336, #101622 72%);
+      transition: transform .18s, border-color .18s;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+      opacity: .85;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: color-mix(in srgb, var(--accent), transparent 45%);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+    }
+
+    .item-icon {
+      flex: 0 0 55px;
+      display: grid;
+      place-items: center;
+      width: 55px;
+      height: 55px;
+      border-radius: 15px;
+      background: color-mix(in srgb, var(--accent), transparent 88%);
+      border: 1px solid color-mix(in srgb, var(--accent), transparent 68%);
+      font-size: 29px;
+    }
+
+    .item-title {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .item-title h3 {
+      margin: 3px 0 8px;
+      font-size: 16px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .rarity {
+      display: inline-block;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stock-badge {
+      display: inline-flex;
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: #1c2e27;
+      color: #86efac;
+      white-space: nowrap;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stock-badge.empty {
+      background: #32222b;
+      color: #fda4af;
+    }
+
+    .description {
+      min-height: 39px;
+      margin: 17px 0;
+      color: #9cabc0;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .card-bottom {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid #ffffff12;
+    }
+
+    .price-label {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+
+    .price {
+      font-weight: 800;
+      font-size: 20px;
+      overflow-wrap: anywhere;
+    }
+
+    .currency {
+      color: #f9cd64;
+      font-size: 12px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px 16px;
+      border: 1px dashed #35445c;
+      border-radius: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .refresh-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+      margin: 18px 0 25px;
+    }
+
+    .refresh-line strong { color: #c6d6ed; }
+
+    .notice {
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid #8a682d66;
+      background: #42331733;
+      color: #f5d89a;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    footer {
+      border-top: 1px solid #ffffff12;
+      padding: 22px 0 28px;
+      color: #718198;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    footer span { color: #a9c8f7; }
+
+    @media (max-width: 850px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .container { width: min(100% - 22px, 1180px); }
+      header { padding-top: 19px; }
+      .brand-icon { width: 45px; height: 45px; font-size: 24px; }
+      .hero { padding: 22px 19px; }
+      .hero::after { right: 4px; font-size: 100px; }
+      .stats { gap: 8px; margin-bottom: 25px; }
+      .stat { padding: 12px; border-radius: 13px; }
+      .stat-label { font-size: 10px; }
+      .grid { grid-template-columns: 1fr; }
+      .card { padding: 17px; }
+      .search { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container topline">
+      <div class="brand">
+        <div class="brand-icon">⛏️</div>
+        <div>
+          <h1>DeepMine <span style="color:#79b4ff">Radar</span></h1>
+          <div class="subtitle">Мониторинг запасов мира DeepMine</div>
+        </div>
+      </div>
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="connectionText">Подключаемся к игре...</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="eyebrow">DeepMine · Live stock</div>
+      <h2>Узнай, что есть в наличии</h2>
+      <p>
+        Актуальные остатки предметов, цены и характеристики,
+        получаемые с серверов Roblox. Проверяй запасы перед покупкой!
+      </p>
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="stat-label">Предметов в каталоге</div>
+        <div class="stat-value" id="totalItems">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Доступно к покупке</div>
+        <div class="stat-value" id="availableItems">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Обновление стоков</div>
+        <div class="stat-value" id="refreshClock">—</div>
+      </div>
+    </section>
+
+    <div id="errorBox" class="notice" hidden></div>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 id="categoryTitle">✨ Ауры</h2>
+          <p id="categorySubtitle">Выбирай эффект и проверяй наличие</p>
+        </div>
+        <input id="search" class="search"
+          type="search" placeholder="🔎 Найти предмет..."
+          aria-label="Поиск предметов">
+      </div>
+
+      <nav class="tabs" aria-label="Категории предметов">
+        <button class="tab active" data-category="auras">✨ Ауры</button>
+        <button class="tab" data-category="eggs">🥚 Яйца</button>
+        <button class="tab" data-category="pickaxes">⛏️ Кирки</button>
+      </nav>
+
+      <div id="grid" class="grid">
+        <div class="empty-state">Загружаем стоки из Roblox...</div>
+      </div>
+
+      <div class="refresh-line">
+        <span>Следующее обновление категории: <strong id="nextRefresh">—</strong></span>
+        <span>Последняя синхронизация: <strong id="lastSync">—</strong></span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <span>DeepMine Stock Radar</span> · Данные поступают из игры Roblox.
+    Остатки могут обновляться после синхронизации серверов.
+  </footer>
+
+  <script>
+    const API_STOCK = "/api/stock";
+    const categoryInfo = {
+      auras: {
+        title: "✨ Ауры",
+        subtitle: "Эффекты, редкость и бонусы",
+        empty: "Аур по этому запросу не найдено."
+      },
+      eggs: {
+        title: "🥚 Яйца",
+        subtitle: "Яйца питомцев и время вылупления",
+        empty: "Яиц по этому запросу не найдено."
+      },
+      pickaxes: {
+        title: "⛏️ Кирки",
+        subtitle: "Кирки, уровни и стоимость",
+        empty: "Кирок по этому запросу не найдено."
+      }
+    };
+
+    let snapshot = null;
+    let activeCategory = "auras";
+    let receivedAt = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    function numberFormat(value) {
+      return new Intl.NumberFormat("ru-RU", {
+        maximumFractionDigits: 2
+      }).format(Number(value) || 0);
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "—";
+      return date.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function formatCountdown(seconds) {
+      if (!Number.isFinite(seconds) || seconds <= 0) return "Ожидается";
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+
+      if (hours > 0) {
+        return `${hours}ч ${String(minutes).padStart(2, "0")}м`;
+      }
+      return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function getAccent(item) {
+      if (Array.isArray(item.color) && item.color.length >= 3) {
+        const rgb = item.color.slice(0, 3).map((n) => {
+          return Math.max(0, Math.min(255, Math.round(Number(n) || 0)));
+        });
+        return `rgb(${rgb.join(",")})`;
+      }
+      return "#65aaff";
+    }
+
+    function makeElement(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined) element.textContent = text;
+      return element;
+    }
+
+    function makeCard(item) {
+      const card = makeElement("article", "card");
+      card.style.setProperty("--accent", getAccent(item));
+
+      const top = makeElement("div", "card-top");
+      const icon = makeElement("div", "item-icon", item.emoji || "📦");
+      const titleBlock = makeElement("div", "item-title");
+      const name = makeElement("h3", "", item.name || "Неизвестный предмет");
+      titleBlock.appendChild(name);
+
+      if (item.rarity) {
+        titleBlock.appendChild(makeElement("span", "rarity", item.rarity));
+      } else if (item.level) {
+        titleBlock.appendChild(
+          makeElement("span", "rarity", `Уровень ${item.level}`)
+        );
+      }
+
+      const quantity = Math.max(0, Number(item.quantity) || 0);
+      const badge = makeElement(
+        "span",
+        "stock-badge" + (quantity <= 0 ? " empty" : ""),
+        quantity <= 0 ? "Нет в наличии" : `В наличии: ${numberFormat(quantity)}`
+      );
+
+      top.append(icon, titleBlock);
+      card.appendChild(top);
+
+      const descriptionParts = [];
+      if (item.description) descriptionParts.push(item.description);
+      if (item.effect) descriptionParts.push(item.effect);
+      if (item.hatchSeconds) {
+        descriptionParts.push(`Вылупление: ${item.hatchSeconds} сек.`);
+      }
+
+      const description = makeElement(
+        "p",
+        "description",
+        descriptionParts.join(" · ") || "Особые свойства предмета"
+      );
+      card.appendChild(description);
+      card.appendChild(badge);
+
+      if (item.stats && activeCategory === "auras") {
+        const stats = item.stats;
+        const statParts = [];
+        if (Number(stats.strength)) {
+          statParts.push(`Сила +${numberFormat(stats.strength * 100)}%`);
+        }
+        if (Number(stats.coins)) {
+          statParts.push(`G-Coins +${numberFormat(stats.coins * 100)}%`);
+        }
+        if (Number(stats.luck)) {
+          statParts.push(`Удача +${numberFormat(stats.luck * 100)}%`);
+        }
+
+        if (statParts.length) {
+          const statsLine = makeElement("p", "description", statParts.join(" · "));
+          statsLine.style.minHeight = "0";
+          statsLine.style.marginTop = "10px";
+          card.appendChild(statsLine);
+        }
+      }
+
+      const bottom = makeElement("div", "card-bottom");
+      const priceBlock = makeElement("div", "");
+      priceBlock.appendChild(makeElement("div", "price-label", "Стоимость"));
+      const priceRow = makeElement("div", "price");
+      priceRow.textContent = numberFormat(item.price);
+      priceRow.appendChild(makeElement("span", "currency", "G-Coins"));
+      priceBlock.appendChild(priceRow);
+
+      bottom.appendChild(priceBlock);
+      card.appendChild(bottom);
+      return card;
+    }
+
+    function render() {
+      const grid = $("grid");
+      grid.replaceChildren();
+
+      if (!snapshot || !snapshot.stocks || !snapshot.stocks[activeCategory]) {
+        grid.appendChild(makeElement(
+          "div",
+          "empty-state",
+          "Ждём первый снимок стоков от Roblox..."
+        ));
+        return;
+      }
+
+      const info = categoryInfo[activeCategory];
+      const group = snapshot.stocks[activeCategory];
+      const query = $("search").value.trim().toLocaleLowerCase("ru");
+      const allItems = Array.isArray(group.items) ? group.items : [];
+
+      const filtered = allItems.filter((item) => {
+        const searchable = [
+          item.name, item.id, item.rarity, item.description, item.effect
+        ].filter(Boolean).join(" ").toLocaleLowerCase("ru");
+        return searchable.includes(query);
+      });
+
+      $("categoryTitle").textContent = info.title;
+      $("categorySubtitle").textContent = info.subtitle;
+      $("totalItems").textContent = numberFormat(allItems.length);
+      $("availableItems").textContent = numberFormat(
+        allItems.filter((item) => Number(item.quantity) > 0).length
+      );
+
+      if (!filtered.length) {
+        grid.appendChild(makeElement("div", "empty-state", info.empty));
+      } else {
+        filtered.forEach((item) => grid.appendChild(makeCard(item)));
+      }
+
+      updateTimers();
+    }
+
+    function updateTimers() {
+      if (!snapshot || !snapshot.stocks) return;
+
+      const group = snapshot.stocks[activeCategory];
+      const target = Number(group && group.refreshAt) || 0;
+      const remaining = target - Math.floor(Date.now() / 1000);
+      const countdown = formatCountdown(remaining);
+
+      $("nextRefresh").textContent = countdown;
+      $("refreshClock").textContent = countdown;
+    }
+
+    async function loadStock() {
+      try {
+        const response = await fetch(API_STOCK, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`API вернул HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.connected || !data.snapshot) {
+          $("statusDot").classList.remove("online");
+          $("connectionText").textContent = "Ожидается игра";
+          $("errorBox").hidden = false;
+          $("errorBox").textContent =
+            data.message || "Сервер ещё не получил данные от Roblox.";
+          return;
+        }
+
+        snapshot = data.snapshot;
+        receivedAt = data.receivedAt || null;
+
+        $("statusDot").classList.add("online");
+        $("connectionText").textContent = "Roblox подключён";
+        $("errorBox").hidden = true;
+        $("lastSync").textContent = formatDate(receivedAt);
+
+        render();
+      } catch (error) {
+        $("statusDot").classList.remove("online");
+        $("connectionText").textContent = "Ошибка соединения";
+        $("errorBox").hidden = false;
+        $("errorBox").textContent =
+          "Не удалось загрузить данные: " + error.message;
+      }
+    }
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeCategory = button.dataset.category;
+
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.toggle("active", tab === button);
+        });
+
+        $("search").value = "";
+        render();
+      });
+    });
+
+    $("search").addEventListener("input", render);
+
+    loadStock();
+    setInterval(loadStock, 30000);
+    setInterval(updateTimers, 1000);
+  </script>
+</body>
+</html>
