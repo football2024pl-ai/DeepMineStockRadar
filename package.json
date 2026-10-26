@@ -1,0 +1,10 @@
+{
+  "name": "deepmine-stock-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DeepMine live stock board backed by the stock snapshots published by Roblox servers.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "express": "^4.21.2" }
+}
